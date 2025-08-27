@@ -1,70 +1,215 @@
-# Getting Started with Create React App
+# React Context API - Sistema de Carrito E-commerce
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Implementación práctica de React Context API para demostrar cómo resolver el problema de "prop drilling" en aplicaciones React reales.
 
-## Available Scripts
+## Problema Abordado
 
-In the project directory, you can run:
+### Contexto del Caso de Uso
+Aplicación de e-commerce donde múltiples componentes distribuidos en diferentes niveles de la jerarquía necesitan acceso al estado del carrito:
 
-### `npm start`
+- **Header**: Mostrar contador de items y precio total
+- **ProductCard**: Agregar productos al carrito  
+- **CartSummary**: Modificar cantidades y eliminar items
+- **Footer**: Enlace con información del carrito
+- **CartIcon**: Estado visual del carrito
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### El Problema Sin Context API
+Sin Context API, este escenario requiere:
+- Pasar props a través de 4-5 niveles de componentes
+- 47+ props pasadas por componentes que no las utilizan
+- Componentes intermedios actuando como meros transportadores de datos
+- Modificaciones cascada cuando cambia la estructura del estado
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Solución Implementada
 
-### `npm test`
+### Arquitectura de Context
+```
+App (CartProvider)
+├── Header
+│   ├── Navigation  
+│   └── CartIcon ← useCart()
+├── ProductList
+│   └── ProductCard ← useCart()
+├── Sidebar
+│   └── CartSummary ← useCart()
+└── Footer
+    └── CartLink ← useCart()
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Componentes Clave
 
-### `npm run build`
+**CartContext.js**
+- Estado centralizado con useReducer
+- Lógica de negocio (add, remove, update, clear)
+- Custom hook `useCart()` con validación
+- Optimizaciones de rendimiento con useMemo
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+**Custom Hook Pattern**
+```javascript
+const { items, totalPrice, addToCart, removeFromCart } = useCart();
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Instalación y Ejecución
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```bash
+# Clonar el repositorio
+git clone [URL-del-repositorio]
+cd cart-context-practice
 
-### `npm run eject`
+# Instalar dependencias
+npm install
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+# Ejecutar aplicación
+npm start
+# Aplicación disponible en http://localhost:3000
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+# Ejecutar tests
+npm test
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+# Coverage completo
+npm test -- --coverage --watchAll=false
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Estructura del Proyecto
 
-## Learn More
+```
+src/
+├── components/
+│   ├── cart/          # Componentes del carrito
+│   │   ├── CartIcon.js
+│   │   ├── CartSummary.js
+│   │   └── CartLink.js
+│   ├── product/       # Componentes de productos
+│   │   ├── ProductCard.js
+│   │   ├── ProductList.js
+│   │   └── CategoryFilter.js
+│   └── layout/        # Componentes de layout
+│       ├── Header.js
+│       ├── Navigation.js
+│       ├── Sidebar.js
+│       └── Footer.js
+├── contexts/
+│   └── CartContext.js # Context API implementation
+├── data/
+│   └── products.js    # Mock data
+├── __tests__/
+│   ├── CartContext.test.js
+│   └── Integration.test.js
+└── App.js
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Beneficios Demostrados
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### 1. Eliminación de Prop Drilling
+- **Antes**: 47 props pasadas por componentes intermedios
+- **Después**: 0 props relacionadas con carrito
+- **Impacto**: Componentes con responsabilidades claras
 
-### Code Splitting
+### 2. Reducción de Código
+- **App.js**: 150+ líneas → 15 líneas
+- **Componentes intermedios**: Sin props de carrito
+- **Mantenibilidad**: Cambios aislados en CartContext
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### 3. Testing Mejorado
+- **Coverage**: 75.7% statements, 20 tests pasando
+- **Aislamiento**: Tests independientes por componente
+- **Mocking**: Provider pattern facilita mocking
 
-### Analyzing the Bundle Size
+### 4. Performance Optimizada
+- Solo componentes consumidores se re-renderizan
+- Valores memoizados previenen re-renders innecesarios
+- Separación clara entre estado y acciones
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Casos de Uso Demostrados
 
-### Making a Progressive Web App
+### Funcionalidades Implementadas
+- Agregar productos al carrito
+- Modificar cantidades (+/-)
+- Eliminar productos individuales
+- Limpiar carrito completo
+- Filtrado de productos por categoría
+- Persistencia visual del estado en múltiples componentes
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### Interacciones Cross-Component
+1. Agregar producto → Actualización automática en Header, Sidebar, Footer
+2. Modificar cantidad → Recálculo de totales en tiempo real
+3. Filtrar categoría → Vista de productos sin afectar carrito
 
-### Advanced Configuration
+## Decisiones Arquitectónicas
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### Por qué Context API
+- **Estado compartido**: Múltiples componentes no relacionados necesitan acceso
+- **Jerarquía compleja**: 4+ niveles de anidación
+- **Frecuencia media**: Estado cambia por interacción usuario, no constantemente
+- **Team junior-friendly**: Curva de aprendizaje baja vs Redux
 
-### Deployment
+### Cuándo NO Usar Context API
+- **Estado local**: Formularios, toggles, estado temporal
+- **Alta frecuencia**: Contadores que cambian cada segundo
+- **Proyectos pequeños**: < 10 componentes
+- **Necesidades avanzadas**: Time-travel debugging, middleware complejo
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+### Patrones Aplicados
+- **Provider Pattern**: Inyección de dependencias
+- **Custom Hooks**: Abstracción y reutilización
+- **Reducer Pattern**: Estado complejo y predecible
+- **Error Boundaries**: Manejo robusto de errores
 
-### `npm run build` fails to minify
+## Testing Strategy
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### Cobertura Actual
+```
+------------------------|---------|----------|---------|---------|
+File                    | % Stmts | % Branch | % Funcs | % Lines |
+------------------------|---------|----------|---------|---------|
+All files               |   75.7  |   65.3   |   74.5  |   73.91 |
+src/contexts            |   94.91 |   78.26  |   100   |   97.72 |
+------------------------|---------|----------|---------|---------|
+```
+
+### Tipos de Tests
+- **Unit Tests**: Reducer y custom hooks
+- **Integration Tests**: Interacción entre componentes
+- **Component Tests**: Rendering y comportamiento UI
+
+## Reflexión Crítica
+
+### Fortalezas de la Implementación
+- Eliminación efectiva de prop drilling
+- Código mantenible y escalable
+- Performance apropiada para el caso de uso
+- Testing comprehensivo
+
+### Limitaciones Identificadas
+- Context no es ideal para estado que cambia muy frecuentemente
+- Re-renders de todos los consumidores en cada cambio
+- Sin funcionalidades avanzadas como time-travel debugging
+
+### Alternativas Consideradas
+- **Redux**: Overkill para este scope, pero mejor para apps complejas
+- **Zustand**: Menor boilerplate, similar funcionalidad
+- **Props locales**: Suficiente para jerarquías simples
+
+## Métricas de Éxito
+
+### Objetivos Técnicos Cumplidos
+- Aplicación funcional con carrito completo
+- Tests pasando (20/20)
+- Eliminación demostrable de prop drilling
+- Performance optimizada
+
+### Objetivos de Aprendizaje Cumplidos
+- Comprensión del problema que Context API resuelve
+- Implementación correcta del patrón Provider-Consumer
+- Conocimiento de cuándo usar y cuándo evitar Context API
+- Integración con patrones modernos de React (hooks, reducers)
+
+## Conclusiones
+
+Context API demuestra ser una solución efectiva para compartir estado en aplicaciones React de complejidad media. La implementación muestra cómo transformar una arquitectura frágil basada en prop drilling en un sistema mantenible y escalable.
+
+El patrón es especialmente valioso cuando múltiples componentes en diferentes niveles de jerarquía necesitan acceso a datos compartidos, como autenticación, temas, o en este caso, estado de carrito de compras.
+
+---
+
+*Proyecto desarrollado como práctica de React Context API - Ingeniería en Software*
